@@ -1,3 +1,5 @@
+from http import HTTPStatus
+
 import pytest
 import requests
 
@@ -17,8 +19,8 @@ class FakeResponse:
 
     @property
     def ok(self):
-        """Mirror requests.Response.ok: True below 400."""
-        return self.status_code < 400
+        """Mirror requests.Response.ok: True for anything below the error range."""
+        return self.status_code < HTTPStatus.BAD_REQUEST
 
     def json(self):
         """Return the canned payload."""

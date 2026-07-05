@@ -2,6 +2,7 @@
 
 import logging
 import time
+from http import HTTPStatus
 from urllib.parse import quote
 
 import requests
@@ -11,6 +12,8 @@ from .models import ApiError, MergeRequest
 log = logging.getLogger(__name__)
 
 _TIMEOUT_SECONDS = 10.0
+_COMMITS_PER_PAGE = 100  # GitLab's maximum page size
+_MS_PER_SECOND = 1000
 
 
 class GitLabClient:
@@ -52,7 +55,7 @@ class GitLabClient:
         page: int | None = 1
         while page is not None:
             response = self._request(
-                f"{mr_url}/commits", params={"per_page": 100, "page": page}
+                f"{mr_url}/commits", params={"per_page": _COMMITS_PER_PAGE, "page": page}
             )
             commits.extend(response.json())
             next_page = response.headers.get("X-Next-Page") or ""
@@ -69,9 +72,9 @@ class GitLabClient:
         log.debug(
             "GET %s params=%s -> HTTP %s (%.0f ms)",
             url, params, response.status_code,
-            (time.monotonic() - started) * 1000,
+            (time.monotonic() - started) * _MS_PER_SECOND,
         )
-        if response.status_code == 404:
+        if response.status_code == HTTPStatus.NOT_FOUND:
             # Unlike a missing Jira ticket (which is rule 3 data), a missing
             # MR means there is nothing to validate: the gate is misconfigured.
             raise ApiError(

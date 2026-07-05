@@ -6,6 +6,7 @@ Works against the provided mock server and, unchanged, against real Jira
 
 import logging
 import time
+from http import HTTPStatus
 
 import requests
 
@@ -14,6 +15,7 @@ from .models import ApiError, Ticket
 log = logging.getLogger(__name__)
 
 _TIMEOUT_SECONDS = 10.0
+_MS_PER_SECOND = 1000
 
 
 class JiraClient:
@@ -44,9 +46,9 @@ class JiraClient:
             raise ApiError(f"Jira request failed: {error}") from error
         log.debug(
             "GET %s -> HTTP %s (%.0f ms)",
-            url, response.status_code, (time.monotonic() - started) * 1000,
+            url, response.status_code, (time.monotonic() - started) * _MS_PER_SECOND,
         )
-        if response.status_code == 404:
+        if response.status_code == HTTPStatus.NOT_FOUND:
             return None
         if not response.ok:
             raise ApiError(f"Jira returned HTTP {response.status_code} for {url}")
