@@ -73,13 +73,13 @@ class TestGitLabClient:
             FakeResponse(payload=[{"message": "WMS-1001: add auth\n"}]),
         )
 
-        mr = make_gitlab(session).fetch_merge_request("group/repo", 7)
+        merge_request = make_gitlab(session).fetch_merge_request("group/repo", 7)
 
-        assert mr.title == "WMS-1001: Add auth"
-        assert mr.source_branch == "feature/WMS-1001-auth"
-        assert mr.description == ""  # null normalized to empty string
-        assert mr.is_draft is True
-        assert mr.commit_messages == ["WMS-1001: add auth\n"]
+        assert merge_request.title == "WMS-1001: Add auth"
+        assert merge_request.source_branch == "feature/WMS-1001-auth"
+        assert merge_request.description == ""  # null normalized to empty string
+        assert merge_request.is_draft is True
+        assert merge_request.commit_messages == ["WMS-1001: add auth\n"]
 
     def test_project_path_is_url_encoded(self):
         """'group/repo' must be sent as one path segment: 'group%2Frepo'."""
@@ -101,9 +101,9 @@ class TestGitLabClient:
             FakeResponse(payload=[{"message": "two"}], headers={"X-Next-Page": ""}),
         )
 
-        mr = make_gitlab(session).fetch_merge_request("group/repo", 7)
+        merge_request = make_gitlab(session).fetch_merge_request("group/repo", 7)
 
-        assert mr.commit_messages == ["one", "two"]
+        assert merge_request.commit_messages == ["one", "two"]
         pages = [params["page"] for url, params, _ in session.calls if params]
         assert pages == [1, 2]
 

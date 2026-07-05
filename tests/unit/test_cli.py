@@ -84,14 +84,14 @@ class TestLoggerOutput:
         """Render a header, the given rule results, and the verdict to a string."""
         stream = io.StringIO()
         logger = Logger(stream=stream)
-        mr = MergeRequest(
+        merge_request = MergeRequest(
             project="group/repo",
             iid=7,
             title="WMS-1001: Add auth",
             source_branch="feature/x",
             description="",
         )
-        logger.mr_header(mr)
+        logger.mr_header(merge_request)
         for result in results:
             logger.rule_result(result)
         logger.verdict(results)

@@ -42,7 +42,7 @@ class GitLabClient:
             title=data["title"],
             source_branch=data["source_branch"],
             description=data.get("description") or "",
-            commit_messages=[c["message"] for c in commits],
+            commit_messages=[commit["message"] for commit in commits],
             is_draft=data.get("draft", False),
             web_url=data.get("web_url", ""),
         )
@@ -65,8 +65,8 @@ class GitLabClient:
         started = time.monotonic()
         try:
             response = self._session.get(url, params=params, timeout=_TIMEOUT_SECONDS)
-        except requests.RequestException as exc:
-            raise ApiError(f"GitLab request failed: {exc}") from exc
+        except requests.RequestException as error:
+            raise ApiError(f"GitLab request failed: {error}") from error
         log.debug(
             "GET %s params=%s -> HTTP %s (%.0f ms)",
             url, params, response.status_code,

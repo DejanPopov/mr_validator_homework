@@ -91,7 +91,7 @@ class Logger:
         """Wrap text in the given ANSI styles, or return it as-is when colors are off."""
         if not self._color or not styles:
             return text
-        prefix = "".join(_ANSI[s] for s in styles)
+        prefix = "".join(_ANSI[style_name] for style_name in styles)
         return f"{prefix}{text}{_RESET}"
 
     # --- diagnostics ------------------------------------------------------
@@ -110,13 +110,13 @@ class Logger:
 
     # --- CI summary -------------------------------------------------------
 
-    def mr_header(self, mr: MergeRequest) -> None:
+    def mr_header(self, merge_request: MergeRequest) -> None:
         """Print which MR is being validated, with its title and URL."""
-        name = self._paint(f"{mr.project}!{mr.iid}", "bold")
-        title = self._paint(f'"{mr.title}"', "bold")
+        name = self._paint(f"{merge_request.project}!{merge_request.iid}", "bold")
+        title = self._paint(f'"{merge_request.title}"', "bold")
         self._write(f"Validating {name} — {title}")
-        if mr.web_url:
-            self._write(self._paint(mr.web_url, "dim"))
+        if merge_request.web_url:
+            self._write(self._paint(merge_request.web_url, "dim"))
         self._write("")
 
     def rule_result(self, result: RuleResult) -> None:
@@ -132,7 +132,7 @@ class Logger:
 
     def verdict(self, results: list[RuleResult]) -> None:
         """Print the final PASS/FAIL verdict line summarizing all rules."""
-        failed = sum(1 for r in results if not r.passed)
+        failed = sum(1 for result in results if not result.passed)
         self._write("")
         if failed:
             text = (

@@ -41,8 +41,8 @@ class JiraClient:
         started = time.monotonic()
         try:
             response = self._session.get(url, timeout=_TIMEOUT_SECONDS)
-        except requests.RequestException as exc:
-            raise ApiError(f"Jira request failed: {exc}") from exc
+        except requests.RequestException as error:
+            raise ApiError(f"Jira request failed: {error}") from error
         log.debug(
             "GET %s -> HTTP %s (%.0f ms)",
             url, response.status_code, (time.monotonic() - started) * 1000,

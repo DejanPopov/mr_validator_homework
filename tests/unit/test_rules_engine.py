@@ -18,7 +18,7 @@ def make_mr(**overrides):
 
 def by_name(results):
     """Index a list of RuleResults by rule name for direct assertions."""
-    return {r.name: r for r in results}
+    return {result.name: result for result in results}
 
 
 REFS = {"WMS-1001": ["title", "branch"]}

@@ -24,9 +24,9 @@ class RuleResult:
     detail: str
 
 
-def _check_not_draft(mr: MergeRequest) -> RuleResult:
+def _check_not_draft(merge_request: MergeRequest) -> RuleResult:
     """Rule 1: the MR must not be marked as Draft."""
-    if mr.is_draft:
+    if merge_request.is_draft:
         return RuleResult(
             "MR is not a draft",
             passed=False,
@@ -76,26 +76,30 @@ def _check_ticket_states(tickets: dict[str, Ticket | None]) -> RuleResult:
     """Rule 4: every existing referenced ticket must be In Review or Done."""
 
     name = "All referenced tickets are in an accepted state"
-    existing = [t for t in tickets.values() if t is not None]
+    existing = [ticket for ticket in tickets.values() if ticket is not None]
     if not existing:
         return RuleResult(name, passed=True, detail="no tickets to check")
-    wrong = [t for t in existing if t.status not in ACCEPTED_STATES]
+    wrong = [ticket for ticket in existing if ticket.status not in ACCEPTED_STATES]
     if wrong:
-        listing = ", ".join(f"{t.key} is '{t.status}'" for t in wrong)
+        listing = ", ".join(f"{ticket.key} is '{ticket.status}'" for ticket in wrong)
         accepted = " or ".join(sorted(ACCEPTED_STATES))
         return RuleResult(
             name,
             passed=False,
             detail=f"{listing}; tickets must be {accepted} before merging",
         )
-    listing = ", ".join(f"{t.key} is '{t.status}'" for t in existing)
+    listing = ", ".join(f"{ticket.key} is '{ticket.status}'" for ticket in existing)
     return RuleResult(name, passed=True, detail=listing)
 
 
-def evaluate(mr: MergeRequest,refs: dict[str, list[str]],tickets: dict[str, Ticket | None],) -> list[RuleResult]:
+def evaluate(
+    merge_request: MergeRequest,
+    refs: dict[str, list[str]],
+    tickets: dict[str, Ticket | None],
+) -> list[RuleResult]:
     """Run every rule and return all results, in reporting order."""
     return [
-        _check_not_draft(mr),
+        _check_not_draft(merge_request),
         _check_has_refs(refs),
         _check_tickets_exist(tickets),
         _check_ticket_states(tickets),

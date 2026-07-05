@@ -28,7 +28,7 @@ EXIT_PASS = 0
 EXIT_FAIL = 1
 EXIT_ERROR = 2
 
-#Regex to parse MR URLs like https://gitlab.com/<project>/-/merge_requests/<iid>
+# Regex to parse MR URLs like https://gitlab.com/<project>/-/merge_requests/<iid>
 _MR_URL_RE = re.compile(r"^(?P<base>https?://[^/]+)/(?P<project>.+?)/-/merge_requests/(?P<iid>\d+)/?$")
 
 
@@ -36,7 +36,10 @@ def parse_mr_url(url: str) -> tuple[str, str, int]:
     """Split an MR web URL into (gitlab base URL, project path, MR IID)."""
     match = _MR_URL_RE.match(url)
     if not match:
-        raise ValueError(f"not a merge request URL: {url!r} ""(expected .../<project>/-/merge_requests/<iid>)")
+        raise ValueError(
+            f"not a merge request URL: {url!r} "
+            "(expected .../<project>/-/merge_requests/<iid>)"
+        )
     return match["base"], match["project"], int(match["iid"])
 
 
@@ -48,7 +51,8 @@ def build_parser() -> argparse.ArgumentParser:
         "Jira tickets in a mergeable state.",
     )
     parser.add_argument(
-        "mr",
+        "merge_request",
+        metavar="mr",
         help="MR URL (https://gitlab.com/<project>/-/merge_requests/<iid>), "
         "or a bare IID when --project is given",
     )
@@ -93,10 +97,10 @@ def build_parser() -> argparse.ArgumentParser:
 
 def resolve_target(args: argparse.Namespace) -> tuple[str, str, int]:
     """Work out (gitlab base URL, project, iid) from the CLI arguments."""
-    if args.mr.startswith(("http://", "https://")):
-        return parse_mr_url(args.mr)
-    if args.project and args.mr.isdigit():
-        return args.gitlab_url, args.project, int(args.mr)
+    if args.merge_request.startswith(("http://", "https://")):
+        return parse_mr_url(args.merge_request)
+    if args.project and args.merge_request.isdigit():
+        return args.gitlab_url, args.project, int(args.merge_request)
     raise ValueError("pass either a full MR URL, or a numeric IID together with --project")
 
 
@@ -107,9 +111,14 @@ def run(args: argparse.Namespace, logger: Logger) -> int:
     jira = JiraClient(args.jira_url, token=args.jira_token)
 
     logger.info("fetching %s!%s from %s", project, iid, gitlab_url)
-    mr = gitlab.fetch_merge_request(project, iid)
+    merge_request = gitlab.fetch_merge_request(project, iid)
 
-    refs = extract_ticket_refs(mr.title, mr.source_branch, mr.description, mr.commit_messages)
+    refs = extract_ticket_refs(
+        merge_request.title,
+        merge_request.source_branch,
+        merge_request.description,
+        merge_request.commit_messages,
+    )
 
     logger.info("referenced tickets: %s", ", ".join(refs) or "none")
     tickets = {}
@@ -120,14 +129,14 @@ def run(args: argparse.Namespace, logger: Logger) -> int:
         )
         tickets[key] = ticket
 
-    results = rules_engine.evaluate(mr, refs, tickets)
+    results = rules_engine.evaluate(merge_request, refs, tickets)
 
-    logger.mr_header(mr)
+    logger.mr_header(merge_request)
     for result in results:
         logger.rule_result(result)
     logger.verdict(results)
 
-    passed = all(r.passed for r in results)
+    passed = all(result.passed for result in results)
     return EXIT_PASS if passed else EXIT_FAIL
 
 
@@ -145,11 +154,11 @@ def main(argv: list[str] | None = None) -> int:
     logger = Logger(verbose=args.verbose, color=args.color)
     try:
         return run(args, logger)
-    except ValueError as exc:
-        logger.error(str(exc))
+    except ValueError as error:
+        logger.error(str(error))
         return EXIT_ERROR
-    except ApiError as exc:
-        logger.error(str(exc))
+    except ApiError as error:
+        logger.error(str(error))
         return EXIT_ERROR
 
 
