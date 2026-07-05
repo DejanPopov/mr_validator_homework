@@ -1,7 +1,7 @@
 import pytest
 import requests
 
-from mr_validator.errors import ApiError
+from mr_validator.models import ApiError
 from mr_validator.gitlab_client import GitLabClient
 from mr_validator.jira_client import JiraClient
 from mr_validator.models import Ticket

@@ -18,11 +18,11 @@ import re
 import sys
 
 from . import rules_engine
-from .errors import ApiError
 from .extractor import extract_ticket_refs
 from .gitlab_client import GitLabClient
 from .jira_client import JiraClient
 from .logger import Logger
+from .models import ApiError
 
 EXIT_PASS = 0
 EXIT_FAIL = 1

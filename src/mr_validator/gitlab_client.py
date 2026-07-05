@@ -6,8 +6,7 @@ from urllib.parse import quote
 
 import requests
 
-from .errors import ApiError
-from .models import MergeRequest
+from .models import ApiError, MergeRequest
 
 log = logging.getLogger(__name__)
 

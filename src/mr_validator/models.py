@@ -1,6 +1,16 @@
-"""Plain data types shared between the clients and the rules engine."""
+"""The shared vocabulary of the package: plain data types and the one
+exception that crosses module boundaries."""
 
 from dataclasses import dataclass, field
+
+
+class ApiError(Exception):
+    """A GitLab or Jira call failed for a reason unrelated to the MR itself.
+
+    Network trouble, timeouts, unexpected HTTP statuses, bad configuration.
+    The CLI maps this to exit code 2 so CI can tell "the MR is invalid"
+    (exit 1) apart from "the validator could not do its job" (exit 2).
+    """
 
 
 @dataclass(frozen=True)

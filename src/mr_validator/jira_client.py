@@ -9,8 +9,7 @@ import time
 
 import requests
 
-from .errors import ApiError
-from .models import Ticket
+from .models import ApiError, Ticket
 
 log = logging.getLogger(__name__)
 
