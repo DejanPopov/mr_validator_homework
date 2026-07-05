@@ -3,8 +3,8 @@ import io
 import pytest
 
 from mr_validator.cli import EXIT_ERROR, build_parser, main, parse_mr_url, resolve_target
-from mr_validator.logger import Logger
 from mr_validator.models import MergeRequest
+from mr_validator.reporter import Reporter
 from mr_validator.rules_engine import RuleResult
 
 
@@ -77,13 +77,13 @@ class TestNoArguments:
         assert "usage: mr-validator" in capsys.readouterr().out
 
 
-class TestLoggerOutput:
-    """The Logger renders the summary a CI log shows to developers."""
+class TestReporterOutput:
+    """The Reporter renders the summary a CI log shows to developers."""
 
     def render(self, results):
         """Render a header, the given rule results, and the verdict to a string."""
         stream = io.StringIO()
-        logger = Logger(stream=stream)
+        reporter = Reporter(stream=stream)
         merge_request = MergeRequest(
             project="group/repo",
             iid=7,
@@ -91,10 +91,10 @@ class TestLoggerOutput:
             source_branch="feature/x",
             description="",
         )
-        logger.mr_header(merge_request)
+        reporter.mr_header(merge_request)
         for result in results:
-            logger.rule_result(result)
-        logger.verdict(results)
+            reporter.rule_result(result)
+        reporter.verdict(results)
         return stream.getvalue()
 
     def test_failing_run_shows_fail_lines_and_verdict(self):
@@ -122,6 +122,6 @@ class TestColors:
     def test_non_terminal_output_gets_no_ansi_codes(self):
         """Piped/redirected output (CI logs, files) must never contain escape codes."""
         stream = io.StringIO()
-        logger = Logger(stream=stream)  # StringIO.isatty() is False
-        logger.rule_result(RuleResult("MR is not a draft", True, ""))
+        reporter = Reporter(stream=stream)  # StringIO.isatty() is False
+        reporter.rule_result(RuleResult("MR is not a draft", True, ""))
         assert "\033[" not in stream.getvalue()

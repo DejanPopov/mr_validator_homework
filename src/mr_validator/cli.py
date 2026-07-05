@@ -21,8 +21,8 @@ from . import rules_engine
 from .extractor import extract_ticket_refs
 from .gitlab_client import GitLabClient
 from .jira_client import JiraClient
-from .logger import Logger
 from .models import ApiError
+from .reporter import Reporter
 
 EXIT_PASS = 0
 EXIT_FAIL = 1
@@ -104,13 +104,13 @@ def resolve_target(args: argparse.Namespace) -> tuple[str, str, int]:
     raise ValueError("pass either a full MR URL, or a numeric IID together with --project")
 
 
-def run(args: argparse.Namespace, logger: Logger) -> int:
+def run(args: argparse.Namespace, reporter: Reporter) -> int:
     """Fetch the MR, extract refs, look up tickets, evaluate rules, report."""
     gitlab_url, project, iid = resolve_target(args)
     gitlab = GitLabClient(gitlab_url, token=args.gitlab_token)
     jira = JiraClient(args.jira_url, token=args.jira_token)
 
-    logger.info("fetching %s!%s from %s", project, iid, gitlab_url)
+    reporter.info("fetching %s!%s from %s", project, iid, gitlab_url)
     merge_request = gitlab.fetch_merge_request(project, iid)
 
     refs = extract_ticket_refs(
@@ -120,21 +120,21 @@ def run(args: argparse.Namespace, logger: Logger) -> int:
         merge_request.commit_messages,
     )
 
-    logger.info("referenced tickets: %s", ", ".join(refs) or "none")
+    reporter.info("referenced tickets: %s", ", ".join(refs) or "none")
     tickets = {}
     for key in refs:
         ticket = jira.fetch_ticket(key)
-        logger.info(
+        reporter.info(
             "%s: %s", key, f"'{ticket.status}'" if ticket else "not found in Jira"
         )
         tickets[key] = ticket
 
     results = rules_engine.evaluate(merge_request, refs, tickets)
 
-    logger.mr_header(merge_request)
+    reporter.mr_header(merge_request)
     for result in results:
-        logger.rule_result(result)
-    logger.verdict(results)
+        reporter.rule_result(result)
+    reporter.verdict(results)
 
     passed = all(result.passed for result in results)
     return EXIT_PASS if passed else EXIT_FAIL
@@ -151,14 +151,14 @@ def main(argv: list[str] | None = None) -> int:
         parser.print_help()
         return EXIT_ERROR
     args = parser.parse_args(argv)
-    logger = Logger(verbose=args.verbose, color=args.color)
+    reporter = Reporter(verbose=args.verbose, color=args.color)
     try:
-        return run(args, logger)
+        return run(args, reporter)
     except ValueError as error:
-        logger.error(str(error))
+        reporter.error(str(error))
         return EXIT_ERROR
     except ApiError as error:
-        logger.error(str(error))
+        reporter.error(str(error))
         return EXIT_ERROR
 
 

@@ -19,8 +19,14 @@ dev = [
 [project.scripts]
 mr-validator = "mr_validator.cli:main"
 
-[tool.setuptools.packages.find]
-where = ["src"]
+# Two packages ship together: the tool itself (under src/) and the shared
+# utils package (at the repo root, reusable by other tools).
+[tool.setuptools]
+packages = ["mr_validator", "utils"]
+
+[tool.setuptools.package-dir]
+mr_validator = "src/mr_validator"
+utils = "utils"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
