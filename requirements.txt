@@ -1,0 +1,4 @@
+# Dependencies are declared in pyproject.toml (the single source of truth).
+# This file exists so the familiar `pip install -r requirements.txt` also works:
+# it installs the package in editable mode together with the dev extras (pytest).
+-e .[dev]
