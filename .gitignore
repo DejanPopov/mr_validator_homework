@@ -1,0 +1,13 @@
+# Virtual environments
+.venv/
+venv/
+
+# Python runtime / build artifacts
+__pycache__/
+*.pyc
+*.egg-info/
+build/
+dist/
+
+# Test caches
+.pytest_cache/
